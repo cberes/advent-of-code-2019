@@ -1,5 +1,5 @@
 package com.cberes.advent_of_code
 
 object Solve extends App {
-  println(Day03.part2())
+  println(Day04.part2())
 }
