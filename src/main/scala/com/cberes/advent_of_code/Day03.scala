@@ -5,7 +5,7 @@ import scala.annotation.tailrec
 object Day03 {
   type Position = (Int, Int)
 
-  type State = Map[Position, Set[Int]]
+  type State = Map[Position, Map[Int, Int]]
 
   case class Where(direction : Char, distance : Int)
 
@@ -25,13 +25,24 @@ object Day03 {
 
   class XState(state : State) {
     def closestIntersection : (Int, Int) = {
-      val allWires = state.values.flatten.toSet
+      val allWires = state.values.flatMap(_.keys).toSet
 
       state
         .filterNot(_._1 == (0,0))
         .filter(_._2.size == allWires.size)
         .keys
         .minBy(_.manhattanDistance)
+    }
+
+    def minStepsToIntersection : Int = {
+      val allWires = state.values.flatMap(_.keys).toSet
+
+      state
+        .filterNot(_._1 == (0,0))
+        .filter(_._2.size == allWires.size)
+        .values
+        .map(_.values.sum)
+        .min
     }
   }
 
@@ -40,22 +51,10 @@ object Day03 {
   private def emptyState : State = Map.empty
 
   def solve(wires : List[Seq[Where]]) : State =
-    wires.zipWithIndex.foldRight(emptyState) { (path, state) => compute(path._1, path._2 + 1, (0, 0), state) }
-
-  def intersection(wires : List[Seq[Where]]) : (Int, Int) = {
-    val central = (0, 0)
-
-    val finalState = wires.zipWithIndex.foldRight(emptyState) { (path, state) => compute(path._1, path._2 + 1, central, state) }
-
-    finalState
-      .filterNot(_._1 == central)
-      .filter(_._2.size == wires.size)
-      .keys
-      .minBy(_.manhattanDistance)
-  }
+    wires.zipWithIndex.foldRight(emptyState) { (path, state) => compute(path._1, path._2 + 1, 0, (0, 0), state) }
 
   @tailrec
-  def compute(path : Seq[Where], key : Int, position : Position, state : State) : State = {
+  def compute(path : Seq[Where], key : Int, initialSteps : Int, position : Position, state : State) : State = {
     path.headOption match {
       case None => state
       case Some(it) =>
@@ -66,13 +65,23 @@ object Day03 {
           case 'D' => (1 to it.distance).map(y => (position._1, position._2 - y))
         }
 
-        val nextState = state ++ positions.map(it => it -> (state.getOrElse(it, Set.empty) + key))
+        val nextState = state ++ positions.zipWithIndex
+          .map(it => (it._1, it._2 + 1 + initialSteps))
+          .map(it => {
+            val currentStateValue = state.getOrElse(it._1, Map.empty)
+            val nextStateValue = if (currentStateValue.contains(key)) currentStateValue else currentStateValue + (key -> it._2)
+            it._1 -> nextStateValue
+          })
 
-        compute(path.tail, key, positions.last, nextState)
+        compute(path.tail, key, initialSteps + positions.size, positions.last, nextState)
     }
   }
 
   def part1() : Int = doWithLines(inputDir + "day03.txt") {
     lines => solve(lines.toList.map(_.toPath)).closestIntersection.manhattanDistance
+  }
+
+  def part2() : Int = doWithLines(inputDir + "day03.txt") {
+    lines => solve(lines.toList.map(_.toPath)).minStepsToIntersection
   }
 }
