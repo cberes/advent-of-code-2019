@@ -77,11 +77,11 @@ object Day03 {
     }
   }
 
-  def part1() : Int = doWithLines(inputDir + "day03.txt") {
+  def part1(args : Array[String]) : Int = doWithLines(args.head) {
     lines => solve(lines.toList.map(_.toPath)).closestIntersection.manhattanDistance
   }
 
-  def part2() : Int = doWithLines(inputDir + "day03.txt") {
+  def part2(args : Array[String]) : Int = doWithLines(args.head) {
     lines => solve(lines.toList.map(_.toPath)).minStepsToIntersection
   }
 }

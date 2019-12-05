@@ -19,11 +19,11 @@ object Day01 {
     }
   }
 
-  def part1() : Int = doWithLines(inputDir + "day01.txt") {
+  def part1(args : Array[String]) : Int = doWithLines(args.head) {
     lines => sum(lines.map(_.toInt), fuel)
   }
 
-  def part2() : Int = doWithLines(inputDir + "day01.txt") {
+  def part2(args : Array[String]) : Int = doWithLines(args.head) {
     lines => sum(lines.map(_.toInt), totalFuel)
   }
 }

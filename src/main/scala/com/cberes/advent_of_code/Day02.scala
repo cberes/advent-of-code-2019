@@ -30,11 +30,11 @@ object Day02 {
     }
   }
 
-  def part1(noun : Int = 12, verb : Int = 2) : Int = doWithLines(inputDir + "day02.txt") {
-    lines => compute(lines.next().toState ++ Map(1 -> noun, 2 -> verb))(0)
+  def part1(args : Array[String]) : Int = doWithLines(args.head) {
+    lines => compute(lines.next().toState ++ Map(1 -> args(1).toInt, 2 -> args(2).toInt))(0)
   }
 
-  def part2() : Any = {
-    for {noun <- 0 to 99; verb <- 0 to 99; if part1(noun, verb) == 19690720} yield 100 * noun + verb
+  def part2(args : Array[String]) : Any = {
+    for {noun <- 0 to 99; verb <- 0 to 99; if part1(Array(args.head, noun.toString, verb.toString)) == args.last.toInt} yield 100 * noun + verb
   }
 }

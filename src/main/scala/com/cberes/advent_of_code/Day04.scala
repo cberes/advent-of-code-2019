@@ -4,9 +4,7 @@ object Day04 {
   def isValid(password : String) : Boolean = {
     val hasRepeat = (0 until password.length - 1).exists(i => password.charAt(i) == password.charAt(i + 1))
 
-    val increases = (0 until password.length - 1).forall(i => password.charAt(i) <= password.charAt(i + 1))
-
-    hasRepeat && increases
+    hasRepeat && characterValuesDoNotDecrease(password)
   }
 
   def isValidPart2(password : String) : Boolean = {
@@ -16,12 +14,18 @@ object Day04 {
         (i == password.length - 2 || password.charAt(i) != password.charAt(i + 2))
     })
 
-    val increases = (0 until password.length - 1).forall(i => password.charAt(i) <= password.charAt(i + 1))
-
-    hasDoubleOnly && increases
+    hasDoubleOnly && characterValuesDoNotDecrease(password)
   }
 
-  def part1() : Int = (125730 to 579381).map(_.toString).count(isValid)
+  private def characterValuesDoNotDecrease(password : String) =
+    (0 until password.length - 1).forall(i => password.charAt(i) <= password.charAt(i + 1))
 
-  def part2() : Int = (125730 to 579381).map(_.toString).count(isValidPart2)
+  private def toRange(input : String) = {
+    val bounds = input.split("-")
+    (bounds(0).toInt to bounds(1).toInt)
+  }
+
+  def part1(args : Array[String]) : Int = toRange(args.head).map(_.toString).count(isValid)
+
+  def part2(args : Array[String]) : Int = toRange(args.head).map(_.toString).count(isValidPart2)
 }
