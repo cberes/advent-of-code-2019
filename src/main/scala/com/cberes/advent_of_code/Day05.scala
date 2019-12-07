@@ -20,6 +20,10 @@ object Day05 {
       binaryOp(2, _ * _, parameterGetter) orElse
       setValue(inputFunc) orElse
       output(outputFunc, parameterGetter) orElse
+      jump(5, _ != 0, parameterGetter) orElse
+      jump(6, _ == 0, parameterGetter) orElse
+      condition(7, _ < _, parameterGetter) orElse
+      condition(8, _ == _, parameterGetter) orElse
       quit
 
   def setValue(f : () => Int) : PartialFunction[(State, Int), State] = { case (state, 3) =>
@@ -35,8 +39,28 @@ object Day05 {
 
     f(value)
 
+    state.copy(pointer = state.pointer + 2)
+  }
+
+  def jump(code : Int, test : Int => Boolean, getter : ParameterGetter) : PartialFunction[(State, Int), State] = { case (state, `code`) =>
+    val value = getter(state, 1)
+
+    if (test(value)) {
+      state.copy(pointer = getter(state, 2))
+    } else {
+      state.copy(pointer = state.pointer + 3)
+    }
+  }
+
+  def condition(code : Int, test : (Int, Int) => Boolean, getter : ParameterGetter) : PartialFunction[(State, Int), State] = { case (state, `code`) =>
+    val left = getter(state, 1)
+    val right = getter(state, 2)
+    val position = state.valueAtOffset(3)
+    val output = if (test(left, right)) 1 else 0
+
     state.copy(
-      pointer = state.pointer + 2)
+      memory = state.memory + (position -> output),
+      pointer = state.pointer + 4)
   }
 
   @tailrec
