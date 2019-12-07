@@ -3,35 +3,55 @@ package com.cberes.advent_of_code
 import scala.annotation.tailrec
 
 object Day02 {
+  type ParameterGetter = (State, Int) => Int
+
+  case class State(memory : Map[Int, Int], pointer : Int = 0, done : Boolean = false) {
+    def apply(address : Int) : Int = memory(address)
+
+    def valueAtOffset(offset : Int) : Int = memory(pointer + offset)
+
+    def currentValue : Int = valueAtOffset(0)
+  }
+
   class Input(input : String) {
-    def toState : Map[Int, Int] = input.split(',').map(_.toInt).zipWithIndex.map(_.swap).toMap
+    def toState : State = State(input.split(',').map(_.toInt).zipWithIndex.map(_.swap).toMap)
   }
 
   implicit def toInput(input : String) : Input = new Input(input)
 
-  implicit def toState(input : String) : Map[Int, Int] = input.toState
+  implicit def toState(input : String) : State = input.toState
 
-  @tailrec
-  def compute(state : Map[Int, Int], position : Int = 0) : Map[Int, Int] = {
-    state(position) match {
-      case 99 => state
+  val quit : PartialFunction[(State, Int), State] = { case (state, 99) => state.copy(done = true) }
 
-      case code if code == 1 || code == 2 => {
-        val positionLeft = state(position + 1)
-        val positionRight = state(position + 2)
-        val positionOutput = state(position + 3)
+  val parameterGetter : ParameterGetter = (state, offset) => state(state.valueAtOffset(offset))
 
-        val left = state.getOrElse(positionLeft, 0)
-        val right = state.getOrElse(positionRight, 0)
-        val value = if (code == 1) left + right else left * right
+  def binaryOp(code : Int, op : (Int, Int) => Int, getter : ParameterGetter) : PartialFunction[(State, Int), State] = { case (state, `code`) =>
+    val positionOutput = state.valueAtOffset(3)
 
-        compute(state + (positionOutput -> value), position + 4)
-      }
-    }
+    val left = getter(state, 1)
+    val right = getter(state, 2)
+    val value = op(left, right)
+
+    state.copy(
+      memory = state.memory + (positionOutput -> value),
+      pointer = state.pointer + 4)
   }
 
-  def part1(args : Array[String]) : Int = doWithLines(args.head) {
-    lines => compute(lines.next().toState ++ Map(1 -> args(1).toInt, 2 -> args(2).toInt))(0)
+  val computer : PartialFunction[(State, Int), State] =
+    binaryOp(1, _ + _, parameterGetter) orElse
+      binaryOp(2, _ * _, parameterGetter) orElse
+      quit
+
+  @tailrec
+  def compute(state : State) : State = {
+    val nextState = computer(state, state.currentValue)
+    if (nextState.done) nextState else compute(nextState)
+  }
+
+  def part1(args : Array[String]) : Int = doWithLines(args.head) { lines =>
+    val inputState = lines.next().toState
+    val modifiedState = State(inputState.memory  ++ Map(1 -> args(1).toInt, 2 -> args(2).toInt))
+    compute(modifiedState)(0)
   }
 
   def part2(args : Array[String]) : Any = {
