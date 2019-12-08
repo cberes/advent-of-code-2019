@@ -11,7 +11,9 @@ object Solve extends App {
     (4, 1) -> Day04.part1,
     (4, 2) -> Day04.part2,
     (5, 1) -> Day05.part1,
-    (5, 2) -> Day05.part1
+    (5, 2) -> Day05.part1,
+    (6, 1) -> Day06.part1,
+    (6, 2) -> Day06.part2
   )
 
   val solver = solvers((args(0).toInt, args(1).toInt))
