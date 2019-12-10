@@ -6,35 +6,39 @@ import scala.annotation.tailrec
 import scala.collection.mutable
 
 object Day05 {
-  val parameterGetter : ParameterGetter = { (state, offset) =>
-    val rawValue = state.currentValue.toString
-    val instruction = rawValue.reverse.padTo(2 + offset, '0').take(2 + offset).reverse
-    instruction.charAt(0) match {
-      case '0' => state(state.valueAtOffset(offset))
-      case '1' => state.valueAtOffset(offset)
+  object PositionAndImmediateMode extends ParameterGetter {
+    override def apply(state: State, offset: Int, isTarget: Boolean) : Long = parameterMode(state, offset) match {
+      case 0 => if (isTarget) state.valueAtOffset(offset) else state(state.valueAtOffset(offset))
+      case 1 => state.valueAtOffset(offset)
     }
   }
 
-  def computer(inputFunc : () => Int, outputFunc : Int => Unit) : PartialFunction[(State, Int), State] =
-    binaryOp(1, _ + _, parameterGetter) orElse
-      binaryOp(2, _ * _, parameterGetter) orElse
-      setValue(inputFunc) orElse
-      output(outputFunc, parameterGetter) orElse
-      jump(5, _ != 0, parameterGetter) orElse
-      jump(6, _ == 0, parameterGetter) orElse
-      condition(7, _ < _, parameterGetter) orElse
-      condition(8, _ == _, parameterGetter) orElse
+  def parameterMode(state : State, oneBasedIndex : Int) : Int = {
+    val rawValue = state.currentValue.toString
+    val instruction = rawValue.reverse.padTo(2 + oneBasedIndex, '0').take(2 + oneBasedIndex).reverse
+    instruction.charAt(0) - '0'
+  }
+
+  def computer(inputFunc : () => Long, outputFunc : Long => Unit) : PartialFunction[(State, Int), State] =
+    binaryOp(1, _ + _, PositionAndImmediateMode) orElse
+      binaryOp(2, _ * _, PositionAndImmediateMode) orElse
+      setValue(inputFunc, PositionAndImmediateMode) orElse
+      output(outputFunc, PositionAndImmediateMode) orElse
+      jump(5, _ != 0, PositionAndImmediateMode) orElse
+      jump(6, _ == 0, PositionAndImmediateMode) orElse
+      condition(7, _ < _, PositionAndImmediateMode) orElse
+      condition(8, _ == _, PositionAndImmediateMode) orElse
       quit
 
-  def setValue(f : () => Int) : PartialFunction[(State, Int), State] = { case (state, 3) =>
-    val position = state.valueAtOffset(1)
+  def setValue(f : () => Long, getter : ParameterGetter) : PartialFunction[(State, Int), State] = { case (state, 3) =>
+    val position = getter(state, 1, isTarget = true)
 
     state.copy(
       memory = state.memory + (position -> f()),
       pointer = state.pointer + 2)
   }
 
-  def output(f : Int => Unit, getter : ParameterGetter) : PartialFunction[(State, Int), State] = { case (state, 4) =>
+  def output(f : Long => Unit, getter : ParameterGetter) : PartialFunction[(State, Int), State] = { case (state, 4) =>
     val value = getter(state, 1)
 
     f(value)
@@ -42,7 +46,7 @@ object Day05 {
     state.copy(pointer = state.pointer + 2)
   }
 
-  def jump(code : Int, test : Int => Boolean, getter : ParameterGetter) : PartialFunction[(State, Int), State] = { case (state, `code`) =>
+  def jump(code : Int, test : Long => Boolean, getter : ParameterGetter) : PartialFunction[(State, Int), State] = { case (state, `code`) =>
     val value = getter(state, 1)
 
     if (test(value)) {
@@ -52,10 +56,10 @@ object Day05 {
     }
   }
 
-  def condition(code : Int, test : (Int, Int) => Boolean, getter : ParameterGetter) : PartialFunction[(State, Int), State] = { case (state, `code`) =>
+  def condition(code : Int, test : (Long, Long) => Boolean, getter : ParameterGetter) : PartialFunction[(State, Int), State] = { case (state, `code`) =>
     val left = getter(state, 1)
     val right = getter(state, 2)
-    val position = state.valueAtOffset(3)
+    val position = getter(state, 3, isTarget = true)
     val output = if (test(left, right)) 1 else 0
 
     state.copy(
@@ -73,15 +77,15 @@ object Day05 {
     if (state.currentValue.toString.length > 2) {
       state.currentValue.toString.takeRight(2).toInt
     } else {
-      state.currentValue
+      state.currentValue.toInt
     }
   }
 
-  def part1(args : Array[String]) : List[Int] = doWithLines(args.head) { lines =>
+  def part1(args : Array[String]) : List[Long] = doWithLines(args.head) { lines =>
     val state = lines.next().toState
-    val inputs = new mutable.Queue[Int]
-    inputs.enqueueAll(args.tail.map(_.toInt))
-    val outputs = new mutable.ListBuffer[Int]
+    val inputs = new mutable.Queue[Long]
+    inputs.enqueueAll(args.tail.map(_.toLong))
+    val outputs = new mutable.ListBuffer[Long]
     compute(state, computer(inputs.dequeue, outputs.append))
     outputs.toList
   }
