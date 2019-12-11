@@ -31,3 +31,7 @@ However, some problems require extra or different arguments
 #### Day 5
 
     sbt "run 5 <1 or 2> <input-file> <input-value>"
+
+#### Day 9
+
+    sbt "run 9 <1 or 2> <input-file> <input-value>"
