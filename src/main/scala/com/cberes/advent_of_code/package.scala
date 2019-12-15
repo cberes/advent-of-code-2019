@@ -9,4 +9,7 @@ package object advent_of_code {
     input.close()
     result
   }
+
+  def resourceIterator(res : String) : Iterator[String] =
+    Source.fromResource(res).getLines()
 }
