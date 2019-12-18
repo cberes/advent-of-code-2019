@@ -35,3 +35,17 @@ However, some problems require extra or different arguments
 #### Day 9
 
     sbt "run 9 <1 or 2> <input-file> <input-value>"
+
+#### Day 17, part 2
+
+    sbt "run 17 2 <input-file> <main-routine> <function-a> <function-b> <function-c> <print-map>"
+
+For example, this was my solution
+
+    sbt "run 17 2 /path/to/day/17/input A,A,B,C,B,C,B,C,A,C R,6,L,8,R,8 R,4,R,6,R,6,R,4,R,4 L,8,R,6,L,10,L,10 n"
+
+Part 2 is easy enough to solve by hand. Map out the route, then find the largest common blocks. Some tips if you're confused
+
+- Prioritize moving straight as long as possible
+- Once you have the route, you know the start of the route must start a function, and the end must end a function
+- Use an editor that highlights other matching blocks of text as you highlight text

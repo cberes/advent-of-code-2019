@@ -46,7 +46,7 @@ object Day17 {
   def part2(args : Array[String]) : Long = doWithLines(args.head) { lines =>
     val state = lines.next().toState
     val robotAwake = state.copy(memory = state.memory + (0L -> 2L))
-    val functions = "A,A,B,C,B,C,B,C,A,C\nR,6,L,8,R,8\nR,4,R,6,R,6,R,4,R,4\nL,8,R,6,L,10,L,10\nn\n"
+    val functions = args.tail.mkString("", "\n", "\n")
     var input = 0
     var output = 0L
     compute(robotAwake, computer(() => {
